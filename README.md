@@ -1,8 +1,8 @@
-# 内存重构部署文档
+# Document
 
-## 宿主机
+## Host Machine Part
 
-### volatility需要安装的包
+### use volatility Framework, You need to install following:
 
 [volatility github](https://github.com/volatilityfoundation/volatility/wiki/Installation)
 
@@ -11,18 +11,18 @@
     - sudo pip install utils
     - sudo apt-get install python-tk
 2. **distorm3**
-    - [参考官方文档](https://github.com/gdabah/distorm/releases)
+    - [Official document](https://github.com/gdabah/distorm/releases)
     - sudo python setup.py build
     - sudo python setup.py install
 3. **pycrypto-2.6.1**
-    - [参考官方文档](https://www.dlitz.net/software/pycrypto/)
+    - [Official document](https://www.dlitz.net/software/pycrypto/)
     - sudo apt-get install python-dev
     - sudo python setup.py build
     - sudo python setup.py install
 4. **yara**
-    - [参考官方文档](https://yara.readthedocs.io/en/v3.7.0/gettingstarted.html)
+    - [Official document](https://yara.readthedocs.io/en/v3.7.0/gettingstarted.html)
 5. **jpype**
-    - [参考官方文档](https://github.com/originell/jpype/releases)
+    - [Official document](https://github.com/originell/jpype/releases)
 6. **setuptool**
     - pip install setuptool
 7. **elftools**
@@ -30,8 +30,8 @@
 8. **paramiko**
     - pip install paramiko
 9. **libvmi-0.10.1**
-    - *建议下载 libvmi-0.10.1 版本 其他版本编译有问题*
-    - [官方文档](https://github.com/libvmi/libvmi)
+    - *Recommended package libvmi-0.10.1, Other versions may have problems when compiling*
+    - [Official document](https://github.com/libvmi/libvmi)
     - ./autogen.sh
     - sudo apt-get install libgnomeui-dev
     - sudo apt-get install check-devel
@@ -44,97 +44,99 @@
     - sudo python setup.py install
     - ldconfig
 
-## 虚拟机
+## Virtual machine Part
 
-1. [**安装jdk 配置jdk**](https://blog.csdn.net/rflyee/article/details/8989663)
-2. 分析Java程序需导入
+1. Install JDK 1.7
+2. To analyze Java programs, you need to send the following packets to the virtual machine.
    - pyagent.jar
    - Test.jar
-3. 分析C程序需导入
-   - buffer_overflow_attack文件夹
+3. To analyze C programs
+   - [buffer-overflow-attack](https://github.com/theChildinus/buffer-overflow-attack) folder
 
-## 工程相关（宿主机端）
+## The project needs to be adjusted (Host Machine Part)
 
-1. pyCharm运行程序
-    - 遇到错误提示 ImportError: libvmi-0.9.so: cannot open shared object file: No such file or directory
-    - 在环境变量/etc/profile.d/jdk.sh 中添加 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-2. 在 `JavaMemory/volatility-2.6/volatility/plugins/linux` 路径下
-   - `linux_runtime_py` 用于分析Java程序
-   - `linux_memory_analyze.py` 用于分析C程序
-3. `linux_runtime.py` 中需要修改的路径有：
+1. pyCharm Running project
+    - Encountered an error message `ImportError: libvmi-0.9.so: cannot open shared object file: No such file or directory`
+    - in file `/etc/profile.d/jdk.sh` add `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib`
+2. in path `JavaMemory/volatility-2.6/volatility/plugins/linux`
+   - `linux_runtime_py` Used to analyze Java programs
+   - `linux_memory_analyze.py` Used to analyze C programs
+3. `linux_runtime.py` The path that needs to be modified are：
 
-    | 变量名          | 默认值                |
+    | variable name   | Default             |
     | --------------- | ------------------- |
     | j_test_path     | -Djava.class.path=/home/kong/JavaMemory/JDI/out/artifacts/JDI_jar/JDI.jar |
     | symbol          | /home/kong/JavaMemory/jdk1.7.0_79/jre/lib/amd64/server/libjvm.so          |
     | self.symbolDict | /home/vm/jdk1.7.0_79/jre/lib/amd64/server/libjvm.so                       |
-4. `linux_memory_analyze.py` 中需要修改的地方有：
+4. `linux_memory_analyze.py` needs to be modified are：
 
-    | 变量名       | 默认值          |
+    | variable name   | Default    |
     | ----------- | -------------- |
-    | calculate 函数中 processname | ./stack 需要修改为分析的C程序名称 |
+    | in function `calculate`, processname | `./stack` You need to modify this bye C program name for analysis |
 
-5. JDI工程需要导入包
+5. JDI project needs to import package:
 
 - `jdk1.7.0_79/lib/sa-jdi.jar`
 - `JavaMemory/JDI.jar`
 
-IDEA中打JDI包方法[参考](https://www.jianshu.com/p/2e06dd2ea4da)，要将官方`JDI.jar`、`sa-jdi.jar` Extracted Directory到项目中
+JDI package method in IDEA[reference](https://www.jianshu.com/p/2e06dd2ea4da)
 
-## 测试环境
+To extract official data packets `JDI.jar` and `sa-jdi.jar` into the project by `Extracted Directory` option
 
-- **测试volatility是否可以获取到虚拟机信息**
-  - volatitlity工程 Pycharm配置参数（如果虚拟机为64位） `-l vmi://ubuntu --profile=LinuxUbuntu1604_内核版本号x64 linux_pslist`
-  - （如果虚拟机为32位） `-l vmi://ubuntu12.04_32bit --profile=LinuxUbuntu1204_23x86 linux_pslist`
-  - 其中 `vmi` 代表虚拟机名称，`profile` 代表在虚拟机内部打包生成的profile名称，`x64、x86` 代表虚拟机位数
-  - 若未显示虚拟机进程信息，可能虚拟机内核版本与overlays目录下的压缩包不匹配 虚拟中通过 `uname -a` 查看内核版本 并执行以下步骤生成profile，可参考[官方文档](https://github.com/volatilityfoundation/volatility/wiki/Linux)（虚拟机中）：
-    1. 将volatility工程拷到虚拟机中
+## Test Volatility is available
+
+- **Test whether the virtual machine process information can be obtained through VolatilitVy Framework**
+  - Pycharm Edit Configuration (If the virtual machine is 64-bit) `-l vmi://ubuntu --profile=LinuxUbuntu1604_139x64 linux_pslist`
+  - （If the virtual machine is 32-bit） `-l vmi://ubuntu12.04_32bit --profile=LinuxUbuntu1204_23x86 linux_pslist`
+  - Where `vmi` represents the name of the virtual machine, `profile` represents the name of the profile generated in the virtual machine, and `x64, x86` represents the number of virtual machines.
+  - Running the program, if the virtual machine process information is not displayed, the virtual machine kernel version may not match the compressed package in the overlays directory. In the virtual machine, check the kernel version by `uname -a` and perform the following steps to generate the profile. [Reference official document](https://github.com/volatilityfoundation/volatility/wiki/Linux)(in Virtual machine)：
+    1. Send the volatility folder to the virtual machine
     2. `sudo apt-get install dwarfdump`
     3. `sudo apt-get install build-essential`
-    4. 建议禁止内核自动升级，设置中停止更新，并 `sudo apt-mark hold 内核版本号`
-    5. `cd volatility/tools/linux 并 make`
+    4. It is recommended to disable the kernel automatic upgrade, stop the update in the settings, and `sudo apt-mark hold KernelVersion`
+    5. `cd volatility/tools/linux` and `make`
     6. `head module.dwarf`
-    7. `sudo zip volatility-2.6/volatility/plugins/overlays/linux/Ubuntu系统版本号_内核版本号.zip volatility-2.6/tools/linux/module.dwarf /boot/System.map-内核版本号`
-    8. 将生成的zip文件拷到宿主机的 `volatility-2.6/volatility/plugins/overlays/linux`目录下 并修改参数
+    7. `sudo zip volatility-2.6/volatility/plugins/overlays/linux/Ubuntu<SystemVersion>_<KernelVersion>.zip volatility-2.6/tools/linux/module.dwarf /boot/System.map-<KernelVersion>`
+    8. Copy the generated zip file to the host path `volatility-2.6/volatility/plugins/overlays/linux`, and Edit Configuration in PyCharm
 
-## 运行流程
+## Running process
 
-### 分析Java程序
+### Analyze Java programs
 
-1. 虚拟机执行命令 `java -jar -Xint Test.jar` 运行测试程序
-2. 虚拟机另开终端 执行命令jps 获取jar对应的 `线程号` 并执行命令 `sudo java -jar pyagent.jar 线程号`
-3. 宿主机 添加配置参数为 `-l vmi://ubuntu --profile=LinuxUbuntu1604_内核版本号x64 linux_runtime -p 测试程序进程号` 并运行
+1. Virtual machine execution command `java -jar -Xint Test.jar`
+2. Create a new terminal in the virtual machine. Run the `jps` command to obtain the process ID corresponding to the jar. and `sudo java -jar pyagent.jar ID`
+3. In Host machine Edit Configuration `-l vmi://ubuntu --profile=LinuxUbuntu<SystemVersion>_<KernelVersion>x64 linux_runtime -p <process ID>` and run
 
-### 分析C程序
+### Analyze C programs
 
-1. 虚拟机执行命令 `./stack` 运行测试程序
-2. 宿主机 添加配置参数为 `-l vmi://ubuntu12.04_32bit --profile=LinuxUbuntu1204_内核版本号x86 linux_memory_analyze -p 测试程序进程号` 并运行
+1. The virtual machine executes the command `./stack` to run the test program.
+2. In Host machine Edit Configuration `-l vmi://ubuntu12.04_32bit --profile=LinuxUbuntu<SystemVersion>_<KernelVersion>x86 linux_memory_analyze -p <process ID>` and run
 
-如果提示 `waiting connection...` 即 该volatility 工程为socket服务端，等待IOT工程作为客户端的连接
+If the prompt `waiting connection...` is called, this project is the socket server, waiting for the IOT project as the client connection, the relevant code can be ignored.
 
 ## JDI
 
-此文件夹是通过 Volatility 进行内存分析时，jpype调用的java接口实现
+This folder is a java interface implementation, called by jpype when performing memory analysis through Volatility Framework.
 
 ## JDI_Local
 
-此文件夹是本地进行Java内存分析的代码，运行流程为：
+This folder is the code for Java memory analysis in local. The running process is：
 
-- root权限打开该工程
-- 添加 `jdk1.7/lib/sa-jdi.jar` 到工程中
-- 使用1.7版本java 运行的测试程序，cd到jdk1.7 bin目录下，`./java -jar -Xint path/of/test.jar`
-- jps获取测试程序进程号，并修改工程中的cmd变量值
-- **测试程序需要sleep一下，否则 Volatility 框架无法获取内存信息**
+- Root permission to open the `JDI_Local` folder in IDEA
+- add `jdk1.7/lib/sa-jdi.jar`
+- Enter the directory `jdk1.7/bin`, run `./java -jar -Xint path/of/test.jar`
+- use `jps` get the test program process number and modify the cmd variable value in the code
+- **The test program needs to call the `Thread.sleep()` function, otherwise the Volatility framework cannot get the memory information.**
 
 ## [buffer-overflow-attack](https://github.com/theChildinus/buffer-overflow-attack)
 
-图片中左侧为缓冲区溢出攻击前的堆栈情况，右侧为攻击后的堆栈情况
+In the picture, the left side is the stack before the buffer overflow attack, and the right side is the stack situation after the attack.
 
 ![buffer_overflow_attack](buffer_overflow_attack.png)
 
 ## Q & A
 
-1. 推荐阅读：
+1. Recommend：
     - [HotSpot Serviceability Agent 实现浅析](https://yq.aliyun.com/articles/20231)
     - [JVM 内存模型概述](https://blog.csdn.net/justloveyou_/article/details/71189093)
     - [doc Serviceability Agent](https://docs.oracle.com/javase/jp/8/docs/serviceabilityagent/)
